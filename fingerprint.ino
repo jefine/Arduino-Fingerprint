@@ -46,7 +46,6 @@ void setup()
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
   // Print a message to the LCD.
-  lcd.print("welcome");
   Serial.begin(9600);
   while (!Serial);  // For Yun/Leo/Micro/Zero/...
   delay(100);
@@ -187,5 +186,6 @@ String printName(int i){
     case 1: return "jam";
     case 3: return "bob";
     case 4: return "tom";
+    default: return "";
   }
 }
