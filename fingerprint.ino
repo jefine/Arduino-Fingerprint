@@ -157,8 +157,12 @@ uint8_t getFingerprintID() {
   // found a match!
   Serial.print("Found ID #"); Serial.print(finger.fingerID);
   Serial.print(" with confidence of "); Serial.println(finger.confidence);
+  Serial.println(printName(finger.fingerID));
   lcd.clear();
-  lcd.print("Found ID #");lcd.print(finger.fingerID);
+  lcd.print("Sucess");
+  lcd.print("   ID #");lcd.print(finger.fingerID);
+  lcd.setCursor(0,1);
+ 
   lcd.print(printName(finger.fingerID));
   return finger.fingerID;
 }
@@ -186,6 +190,6 @@ String printName(int i){
     case 1: return "jam";
     case 3: return "bob";
     case 4: return "tom";
-    default: return "";
+    default: return "null";
   }
 }
