@@ -13,7 +13,7 @@ const char *monthName[12] = {
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
-
+static bool condition[100];
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
 const int rs = 8, en = 9, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
@@ -44,7 +44,6 @@ void setup()
 {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
-  lcd.print("hello");
   Serial.begin(9600);
   while (!Serial);  // For Yun/Leo/Micro/Zero/...
   delay(100);
@@ -92,6 +91,8 @@ void setup()
     while (1);
   }
   Serial.println(F("card initialized."));
+  record(-2);
+  
   // Set the data rate for the sensor serial port
   // Begin serial communication with the fingerprint sensor
   finger.begin(57600);
@@ -129,7 +130,10 @@ void setup()
 void loop()                     // run over and over again
 {
   getFingerprintID();   //run
-  delay(500);            //don't ned to run this at full speed.//may we delay(500)
+  delay(100);            //don't ned to run this at full speed.//may we delay(500)
+  lcd.clear();
+  delay(5);
+  lcd.print("     press!");
 }
 
 
@@ -204,14 +208,19 @@ uint8_t getFingerprintID() {
   Serial.print(F(" with confidence of ")); Serial.println(finger.confidence);
   Serial.println(printName(finger.fingerID));
   lcd.clear();
-  lcd.print(F("Sucess"));
+  if(!condition[finger.fingerID]){
+    lcd.print(F("Weclcome"));
+  }
+  else {
+    lcd.print(F("GoodBye"));
+  }
   lcd.print(F("   ID #"));lcd.print(finger.fingerID);
   lcd.setCursor(0,1);
  
   lcd.print(printName(finger.fingerID));
 
   record(finger.fingerID);
-  
+  delay(1000);
   return finger.fingerID;
 }
 
@@ -227,20 +236,20 @@ int getFingerprintIDez() {
   if (p != FINGERPRINT_OK)  return -1;
 
   // found a match!
-  Serial.print("Found ID #"); Serial.print(finger.fingerID);
-  Serial.print(" with confidence of "); Serial.println(finger.confidence);
-  delay(1000);
+//  Serial.print("dezFound ID #"); Serial.print(finger.fingerID);
+//  Serial.print(" with confidence of "); Serial.println(finger.confidence);
+//  delay(1000);
   return finger.fingerID;
 }
 void record(int id){
     // if the file is available, write to it:
-    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+    File dataFile = SD.open("505.txt", FILE_WRITE);
     if (dataFile) {
     String t = "";
     t+=(String)tmYearToCalendar(tm.Year);
-    t+=":";
+    t+=".";
     t+=(String)tm.Month;
-    t+=":";
+    t+=".";
     t+=(String)tm.Day;
     t+=",";
     t+=(String)tm.Hour;
@@ -249,14 +258,35 @@ void record(int id){
     t+=":";
     t+=(String)tm.Second; 
     t+=",";
+   
+      if(id>=0){
+        if(!condition[id]){
+          t+="in";
+          condition[id]=true;
+        }
+        else {
+          t+="out";
+          condition[id]=false;
+        }
+      }
+      else {
+        t+="null";
+      }
+    
+    t+=",";
     t+=printName(id);
+    
     dataFile.println(t);
+    delay(100);
     dataFile.close();
+    
     Serial.println(t);
+    delay(10);
     }
     else {
     Serial.println(F("error opening datalog.txt"));
-    lcd.print("Error SD");
+    lcd.setCursor(0,1);
+    lcd.print(F("    Error SD"));
     while(1);
     }
 } 
@@ -293,10 +323,12 @@ bool getDate(const char *str)
 
 String printName(int i){
   switch(i){
-    case 0: return "pika";
-    case 1: return "jam";
-    case 3: return "bob";
-    case 4: return "tom";
-    default: return "null";
+    case -2: return F("Device open");
+    case -1:return F("stronger");
+    case 0: return F("pika");
+    case 1: return F("jam");
+    case 3: return F("bob");
+    case 4: return F("tom");
+    default: return F("null");
   }
 }
