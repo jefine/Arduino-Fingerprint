@@ -7,13 +7,13 @@
 #include <Wire.h>
 #include <TimeLib.h>
 #include <DS1307RTC.h>
-tmElements_t tm;
+
 
 const char *monthName[12] = {
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
-static bool condition[100];
+static bool condition[50];
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
 const int rs = 8, en = 9, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
@@ -34,7 +34,7 @@ SoftwareSerial mySerial(6, 7);
 #define mySerial Serial1
 
 #endif
-
+tmElements_t tm;
 
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
@@ -49,7 +49,7 @@ void setup()
   delay(100);
    bool parse=false;
   bool config=false;
-
+  
   // get the date and time the compiler was run
   if (getDate(__DATE__) && getTime(__TIME__)) {
     parse = true;
@@ -244,6 +244,8 @@ int getFingerprintIDez() {
 void record(int id){
     // if the file is available, write to it:
     File dataFile = SD.open("505.txt", FILE_WRITE);
+    tmElements_t tm;
+    if(RTC.read(tm)){
     if (dataFile) {
     String t = "";
     t+=(String)tmYearToCalendar(tm.Year);
@@ -274,6 +276,8 @@ void record(int id){
       }
     
     t+=",";
+    t+=id;
+    t+=",";
     t+=printName(id);
     
     dataFile.println(t);
@@ -282,12 +286,39 @@ void record(int id){
     
     Serial.println(t);
     delay(10);
+    
+    // size > 3GB
+    if(dataFile.size() > 3221225472){
+      lcd.clear();
+      delay(5);
+      lcd.print(F("Warning!"));
+      lcd.setCursor(0,1);
+      lcd.print(F("SD FULL!"));
+      delay(3000);
     }
+    //size > 3.3GB
+    if(dataFile.size() > 3543348019){
+      lcd.clear();
+      delay(5);
+      lcd.print(F("Error!"));
+      lcd.setCursor(0,1);
+      lcd.print(F("SD FULL!"));
+      while(1)delay(1);
+    }
+    
+    }
+    
     else {
     Serial.println(F("error opening datalog.txt"));
     lcd.setCursor(0,1);
     lcd.print(F("    Error SD"));
     while(1);
+    }
+    }
+    else{
+       Serial.println(F("DS1307RTC read error"));
+       lcd.clear();
+       lcd.print(F("DS1307RTC Error"));
     }
 } 
 
